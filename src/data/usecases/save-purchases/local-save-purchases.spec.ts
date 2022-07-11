@@ -1,8 +1,6 @@
 import {LocalSavePurchases} from "../../../data/usecases"
 import {mockPurchases, CacheStoreSpy} from "../../../data/tests"
 
-
-
 type SutTypes = {
     sut: LocalSavePurchases;
     cacheStore: CacheStoreSpy
@@ -18,34 +16,32 @@ const makeSut = (): SutTypes => {
     }
 }
 
-
 describe("LocalSavePurchases", () => {
-    test('Should not delete cache on sut.init', () => {
+    test('Should not delete or insert cache on sut.init', () => {
         const {cacheStore} = makeSut()        
-        expect(cacheStore.deleteCallsCount).toBe(0)
+        expect(cacheStore.messages).toEqual([])
     })
 
-    test('Should not delete cache on sut.init', async () => {
+    test('Should delete old cache on sut.save', async () => {
         const {cacheStore, sut} = makeSut()
         await sut.save(mockPurchases())
-        expect(cacheStore.deleteCallsCount).toBe(1)
+        expect(cacheStore.messages).toEqual([CacheStoreSpy.message.delete, CacheStoreSpy.message.insert])
         expect(cacheStore.deleteKey).toBe('purchases')
     })
 
     test('Should not insert new Cache if delete fails', () => {
         const {cacheStore, sut} = makeSut()        
-        // cacheStore.simulateDeleteError()
-        // const promise = sut.save(mockPurchases())
-        // expect(cacheStore.insertCallsCount).toBe(0)
-        // expect(promise).rejects.toThrow()
+        cacheStore.simulateDeleteError()
+        const promise = sut.save(mockPurchases())
+        expect(cacheStore.messages).toEqual([CacheStoreSpy.message.delete])
+        expect(promise).rejects.toThrow()
     })
 
     test('Should insert new Cache if delete successed', async () => {
         const {cacheStore, sut} = makeSut()
         const purchases = mockPurchases()
         await sut.save(purchases)
-        expect(cacheStore.deleteCallsCount).toBe(1)
-        expect(cacheStore.insertCallsCount).toBe(1)
+        expect(cacheStore.messages).toEqual([CacheStoreSpy.message.delete, CacheStoreSpy.message.insert])
         expect(cacheStore.insertKey).toBe('purchases')
         expect(cacheStore.insertValues).toEqual(purchases)
     })
