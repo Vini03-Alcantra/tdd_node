@@ -67,7 +67,7 @@ describe("LocalSavePurchases", () => {
         expect(purchases).toEqual(cacheStore.fetchResult.value)
     })
 
-    test('Should return a empty list if cache 3 days old', async () => {
+    test('Should return a empty list if more than 3 days old', async () => {
         const currentDate = new Date()
         const timestamp = new Date(currentDate)
         timestamp.setDate(timestamp.getDate() - 3)
@@ -83,4 +83,39 @@ describe("LocalSavePurchases", () => {
         expect(cacheStore.deleteKey).toBe('purchases')
         expect(purchases).toEqual([])
     })
+
+    test('Should return a empty list if more than 3 days old', async () => {
+        const currentDate = new Date()
+        const timestamp = new Date(currentDate)
+        timestamp.setDate(timestamp.getDate() - 3)
+        timestamp.setSeconds(timestamp.getSeconds() - 1)
+        const {cacheStore, sut} = makeSut(currentDate)
+        cacheStore.fetchResult = {
+            timestamp, 
+            value: mockPurchases()
+        }
+        const purchases = await sut.loadAll()
+        expect(cacheStore.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete])        
+        expect(cacheStore.fetchKey).toBe('purchases')
+        expect(cacheStore.deleteKey).toBe('purchases')
+        expect(purchases).toEqual([])
+    })
+
+    test('Should return a empty list if cache is 3 days old', async () => {
+        const currentDate = new Date()
+        const timestamp = new Date(currentDate)
+        timestamp.setDate(timestamp.getDate() - 3)
+        timestamp.setSeconds(timestamp.getSeconds() - 1)
+        const {cacheStore, sut} = makeSut(currentDate)
+        cacheStore.fetchResult = {
+            timestamp, 
+            value: mockPurchases()
+        }
+        const purchases = await sut.loadAll()
+        expect(cacheStore.actions).toEqual([CacheStoreSpy.Action.fetch, CacheStoreSpy.Action.delete])        
+        expect(cacheStore.fetchKey).toBe('purchases')
+        expect(cacheStore.deleteKey).toBe('purchases')
+        expect(purchases).toEqual([])
+    })
+
 })
